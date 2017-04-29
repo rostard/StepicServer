@@ -6,6 +6,7 @@
 #include <sys/stat.h>
 #include <vector>
 #include <sstream>
+#include <fcntl.h>
 
 
 using std::endl;
@@ -30,10 +31,10 @@ std::vector<std::string> split(std::string str, char delim){
     ret.resize(ret.size()-1);
     return ret;
 }
-
+bool me=false;
 void getParam(int argc, char** argv){
     int opt;
-    while((opt=getopt(argc,argv,"h:p:d:"))!=-1){
+    while((opt=getopt(argc,argv,"h:p:d:m"))!=-1){
         switch(opt) {
             case 'h':
                 server_ip = optarg;
@@ -44,6 +45,8 @@ void getParam(int argc, char** argv){
             case 'd':
                 server_directory = optarg;
                 break;
+            case 'm':
+                me=true;
             default:
                 break;
         }
@@ -111,26 +114,43 @@ void processHTTP(int socket, std::string data) {
         log<<resource<<endl;
         if(resource[0]=='/')resource=&resource[1];
         log<<resource<<endl;
-        FILE *f = fopen(resource.c_str(), "rb");
-        log<<f;
-        if(f){
 
+        std::string response;
+
+        std::string header;
+        std::string data;
+        char buf[2048];
+
+        FILE *f=fopen(resource.c_str(),"r");
+        if(f){
+            //fread((void*)data.data(),1024*20,1,f);
+            fread(buf,2048,1,f);
+            data=buf;
+
+            header= "HTTP/1.0 200 OK\x0D\x0A"
+                            "Content-Type: text/html\x0D\x0A"
+                            "Content-Length: "+std::to_string(data.size())+"\x0D\x0A\x0D\x0A";
+            response=header+data;
+            log<<response;
+            send(socket,response.c_str(),response.size(),MSG_NOSIGNAL);
         }
         else{
-            static const char response[2048] = "HTTP/1.0 404 NOT FOUND\x0D\x0A"
+            header= "HTTP/1.0 404 NOT FOUND\x0D\x0A"
                     "Content-Length: 0\x0D\x0A"
                     "Connection: close\x0D\x0A"
                     "Content-Type: text/html\x0D\x0A\x0D\x0A";
-            send(socket,response,2048,MSG_NOSIGNAL);
+            send(socket,header.c_str(),header.size(),MSG_NOSIGNAL);
+
         }
+
     }
 
 }
 
 int main(int argc, char** argv) {
     getParam(argc,argv);
-    log.open("/home/box/log.txt");
-
+    if(me)log.open("log.txt");
+    else log.open("/home/box/log.txt");
     int fd=prepareSocket(server_ip,server_port);
 
     daemonize();
