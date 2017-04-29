@@ -49,11 +49,11 @@ int main(int argc, char** argv) {
         out << "Kill main" << std::endl;
         return 0;
     }
-
+    out<<"Second proc"<<std::endl;
     int conn_fd=accept(fd,NULL,NULL);
     out<<"accepted"<<std::endl;
     char buf[1024];
-    int len;
+    ssize_t len;
     while((len=recv(conn_fd,buf,1024,0))>0){
         out<<buf<<std::endl;
     }
