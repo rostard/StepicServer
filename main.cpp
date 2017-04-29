@@ -4,15 +4,32 @@
 
 #include <fstream>
 #include <sys/stat.h>
+#include <vector>
+#include <sstream>
+
 
 using std::endl;
 using std::cout;
+
+std::ofstream log;
+
+
 
 char* server_ip=(char*)"0.0.0.0";
 uint16_t server_port=12345;
 char* server_directory;
 
-std::ofstream log;
+std::vector<std::string> split(std::string str, char delim){
+    std::stringstream ss(str);
+    std::string element;
+    std::vector<std::string> ret;
+
+    while(getline(ss,element,delim)){
+        ret.push_back(element);
+    }
+    ret.resize(ret.size()-1);
+    return ret;
+}
 
 void getParam(int argc, char** argv){
     int opt;
@@ -82,23 +99,38 @@ int daemonize(){
     return 1;
 }
 
+void processHTTP(int socket, std::string data) {
+    std::vector<std::string> lines = split(data, '\n');
+    std::vector<std::string> head = split(lines[0], ' ');
+    for (int i = 0; i < lines.size(); i++) {
+        log << i + 1 << ": " << lines[i] << endl;
+    }
+
+    if (head[0] == "GET"){
+
+        static const char response[2048] = "HTTP/1.0 404 NOT FOUND\x0D\x0A"
+                "Content-Length: 0\x0D\x0A"
+                "Content-Type: text/html\x0D\x0A\x0D\x0A";
+        send(socket,response,2048,0);
+    }
+
+}
+
 int main(int argc, char** argv) {
     getParam(argc,argv);
-    log.open("/home/box/log.txt");
+    log.open("log.txt");
 
     int fd=prepareSocket(server_ip,server_port);
 
     daemonize();
     chdir(server_directory);
 
-    int conn_fd=accept(fd,NULL,NULL);
+    int client=accept(fd,NULL,NULL);
     log<<"accepted"<<endl;
 
     char buf[1024];
-    recv(conn_fd,buf,1024,0);
-        log<<"a";
-        log<<buf<<endl;
-
+    recv(client,buf,1024,0);
+    processHTTP(client,buf);
     close(fd);
     log.close();
     return 0;
