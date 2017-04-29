@@ -107,19 +107,29 @@ void processHTTP(int socket, std::string data) {
     }
 
     if (head[0] == "GET"){
+        std::string resource=head[1];
+        log<<resource<<endl;
+        if(resource[0]=='/')resource=&resource[1];
+        log<<resource<<endl;
+        FILE *f = fopen(resource.c_str(), "rb");
+        log<<f;
+        if(f){
 
-        static const char response[2048] = "HTTP/1.0 404 NOT FOUND\x0D\x0A"
-                "Content-Length: 0\x0D\x0A"
-                "Connection: close\x0D\x0A"
-                "Content-Type: text/html\x0D\x0A\x0D\x0A";
-        send(socket,response,2048,0);
+        }
+        else{
+            static const char response[2048] = "HTTP/1.0 404 NOT FOUND\x0D\x0A"
+                    "Content-Length: 0\x0D\x0A"
+                    "Connection: close\x0D\x0A"
+                    "Content-Type: text/html\x0D\x0A\x0D\x0A";
+            send(socket,response,2048,MSG_NOSIGNAL);
+        }
     }
 
 }
 
 int main(int argc, char** argv) {
     getParam(argc,argv);
-    log.open("log.txt");
+    log.open("/home/box/log.txt");
 
     int fd=prepareSocket(server_ip,server_port);
 
