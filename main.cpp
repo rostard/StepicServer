@@ -28,7 +28,7 @@ void getParam(int argc, char** argv){
 
 int main(int argc, char** argv) {
     getParam(argc,argv);
-    std::ofstream out("log.txt");
+    std::ofstream out("/home/box/log.txt");
     out<<serv_ip<<std::endl;
     out<<serv_port<<std::endl;
     out<<serv_directory<<std::endl;
