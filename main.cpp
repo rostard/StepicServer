@@ -110,6 +110,7 @@ void processHTTP(int socket, std::string data) {
 
         static const char response[2048] = "HTTP/1.0 404 NOT FOUND\x0D\x0A"
                 "Content-Length: 0\x0D\x0A"
+                "Connection: close\x0D\x0A"
                 "Content-Type: text/html\x0D\x0A\x0D\x0A";
         send(socket,response,2048,0);
     }
