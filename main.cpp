@@ -3,7 +3,7 @@
 #include <arpa/inet.h>
 
 #include <fstream>
-char* serv_ip="127.0.0.1";
+char* serv_ip=(char*)"0.0.0.0";
 int serv_port=11180;
 char* serv_directory;
 
