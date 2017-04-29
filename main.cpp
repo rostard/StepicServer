@@ -113,6 +113,7 @@ void processHTTP(int socket, std::string data) {
         std::string resource=head[1];
         log<<resource<<endl;
         if(resource[0]=='/')resource=&resource[1];
+        resource=resource.substr(0,resource.find('?'));
         log<<resource<<endl;
 
         std::string response;
@@ -129,6 +130,7 @@ void processHTTP(int socket, std::string data) {
 
             header= "HTTP/1.0 200 OK\x0D\x0A"
                             "Content-Type: text/html\x0D\x0A"
+                            "Connection: close\x0D\x0A"
                             "Content-Length: "+std::to_string(data.size())+"\x0D\x0A\x0D\x0A";
             response=header+data;
             log<<response;
@@ -156,12 +158,15 @@ int main(int argc, char** argv) {
     daemonize();
     chdir(server_directory);
 
-    int client=accept(fd,NULL,NULL);
-    log<<"accepted"<<endl;
+    while(true){
+        int client=accept(fd,NULL,NULL);
+        log<<"accepted"<<endl;
 
-    char buf[1024];
-    recv(client,buf,1024,0);
-    processHTTP(client,buf);
+        char buf[1024];
+        recv(client,buf,1024,0);
+        processHTTP(client,buf);
+
+    }
     close(fd);
     log.close();
     return 0;
