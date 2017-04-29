@@ -26,7 +26,7 @@ void getParam(int argc, char** argv){
 
 int main(int argc, char** argv) {
     //getParam(argc,argv);
-    std::ofstream out("log.txt");
+    std::ofstream out("/home/box/log.txt");
     int fd=socket(AF_INET,SOCK_STREAM,IPPROTO_TCP);
     sockaddr_in addr;
     addr.sin_family=AF_INET;
