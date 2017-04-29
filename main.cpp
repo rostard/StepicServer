@@ -9,6 +9,7 @@
 #include <fcntl.h>
 #include <sys/epoll.h>
 #include <strings.h>
+#include <thread>
 
 #define MAX_EVENTS 20
 
@@ -172,7 +173,7 @@ int main(int argc, char** argv) {
     for(int cnt=0;cnt<1000;cnt++){
         epoll_event Events[MAX_EVENTS];
         int N = epoll_wait(Epoll,Events,MAX_EVENTS,-1);
-
+        #pragma omp parallel for num_threads(15)
         for(unsigned int i=0;i<N;i++){
             if(Events[i].data.fd==fd){
                 int client = accept(fd,0,0);
@@ -183,6 +184,7 @@ int main(int argc, char** argv) {
             else{
                 char buf[1024];
                 recv(Events[i].data.fd,buf,1024,0);
+                //std::thread thr(processHTTP,Events[i].data.fd);
                 processHTTP(Events[i].data.fd,buf);
             }
         }
