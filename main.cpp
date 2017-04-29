@@ -25,7 +25,7 @@ void getParam(int argc, char** argv){
 }
 
 int main(int argc, char** argv) {
-    //getParam(argc,argv);
+    getParam(argc,argv);
     std::ofstream out("log.txt");
     int fd=socket(AF_INET,SOCK_STREAM,IPPROTO_TCP);
     sockaddr_in addr;
@@ -40,10 +40,11 @@ int main(int argc, char** argv) {
         out << "Kill main" << std::endl;
         return 0;
     }
+
     int conn_fd=accept(fd,NULL,NULL);
+    out<<"accepted"<<std::endl;
     char buf[1024];
     int len;
-
     while((len=recv(conn_fd,buf,1024,0))>0){
         out<<buf<<std::endl;
     }
