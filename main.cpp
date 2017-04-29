@@ -8,7 +8,7 @@ int serv_port=11180;
 char* serv_directory;
 
 void getParam(int argc, char** argv){
-    char opt;
+    int opt;
     while((opt=getopt(argc,argv,"h:p:d:"))!=-1){
         switch(opt) {
             case 'h':
@@ -20,6 +20,8 @@ void getParam(int argc, char** argv){
             case 'd':
                 serv_directory = optarg;
                 break;
+            default:
+                break;
         }
     }
 }
@@ -27,6 +29,9 @@ void getParam(int argc, char** argv){
 int main(int argc, char** argv) {
     getParam(argc,argv);
     std::ofstream out("/home/box/log.txt");
+    out<<serv_ip<<std::endl;
+    out<<serv_port<<std::endl;
+    out<<serv_directory<<std::endl;
     int fd=socket(AF_INET,SOCK_STREAM,IPPROTO_TCP);
     sockaddr_in addr;
     addr.sin_family=AF_INET;
@@ -34,7 +39,11 @@ int main(int argc, char** argv) {
     addr.sin_addr.s_addr=htonl(INADDR_ANY);
     //inet_aton(serv_ip,&addr.sin_addr);
     int err= bind(fd,(sockaddr*)(&addr),sizeof(addr));
+    out<<err<<std::endl;
+    std::cout<<err;
     err=listen(fd,10);
+    std::cout<<err;
+    out<<err<<std::endl;
     if(fork()) {
         std::cout<<"if";
         out << "Kill main" << std::endl;
