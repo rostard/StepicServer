@@ -4,7 +4,7 @@
 
 #include <fstream>
 char* serv_ip=(char*)"0.0.0.0";
-int serv_port=11180;
+int serv_port=12345;
 char* serv_directory;
 
 void getParam(int argc, char** argv){
