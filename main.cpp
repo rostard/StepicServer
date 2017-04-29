@@ -66,7 +66,7 @@ int daemonize(){
     switch (pid){
         case 0:
             log<<"Child alive"<<endl;
-
+            setsid();
             break;
         case -1:
             log<<"Error in daemon"<<endl;
