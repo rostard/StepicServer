@@ -3,22 +3,27 @@
 #include <arpa/inet.h>
 
 #include <fstream>
-char* serv_ip=(char*)"0.0.0.0";
-int serv_port=12345;
-char* serv_directory;
 
+using std::endl;
+using std::cout;
+
+char* server_ip=(char*)"0.0.0.0";
+uint16_t server_port=12345;
+char* server_directory;
+
+std::ofstream log;
 void getParam(int argc, char** argv){
     int opt;
     while((opt=getopt(argc,argv,"h:p:d:"))!=-1){
         switch(opt) {
             case 'h':
-                serv_ip = optarg;
+                server_ip = optarg;
                 break;
             case 'p':
-                serv_port = atoi(optarg);
+                server_port = atoi(optarg);
                 break;
             case 'd':
-                serv_directory = optarg;
+                server_directory = optarg;
                 break;
             default:
                 break;
@@ -26,40 +31,70 @@ void getParam(int argc, char** argv){
     }
 }
 
-int main(int argc, char** argv) {
-    getParam(argc,argv);
-    std::ofstream out("/home/box/log.txt");
-    out<<serv_ip<<std::endl;
-    out<<serv_port<<std::endl;
-    out<<serv_directory<<std::endl;
-    int fd=socket(AF_INET,SOCK_STREAM,IPPROTO_TCP);
+int prepareSocket(char* ip,uint16_t port){
+    log<<server_ip<<endl;
+    log<<server_port<<endl;
+    log<<server_directory<<endl;
+
+    int fd=socket(PF_INET,SOCK_STREAM,IPPROTO_TCP);
+
     sockaddr_in addr;
     addr.sin_family=AF_INET;
-    addr.sin_port=htons(serv_port);
-    //addr.sin_addr.s_addr=htonl(serv_ip);
-    inet_aton(serv_ip,&addr.sin_addr);
-    int err= bind(fd,(sockaddr*)(&addr),sizeof(addr));
-    out<<err<<std::endl;
-    std::cout<<err;
-    err=listen(fd,10);
-    std::cout<<err;
-    out<<err<<std::endl;
-    if(fork()) {
-        out << "Kill main" << std::endl;
-        return 0;
+    addr.sin_port=htons(port);
+    inet_aton(ip,&addr.sin_addr);
+
+    int err = bind(fd,(sockaddr*)(&addr),sizeof(addr));
+
+    if(err==-1){
+        log<<"err in bind"<<endl;
+        cout<<"err in bind"<<endl;
+        exit(EXIT_FAILURE);
     }
-    out<<"pid="<<getpid()<<std::endl;
-    out<<"Second proc"<<std::endl;
-    int conn_fd=accept(fd,NULL,NULL);
-    out<<"accepted"<<std::endl;
-    char buf[1024];
-    ssize_t len;
-    while((len=recv(conn_fd,buf,1024,0))>0){
-        out<<buf<<std::endl;
-        if(!len)return 0;
+    err=listen(fd,SOMAXCONN);
+    if(err==-1){
+        log<<"err in listen"<<endl;
+        cout<<"err in listen"<<endl;
+        exit(EXIT_FAILURE);
     }
 
-    std::cout << "Hello, World!" << std::endl;
-    out.close();
+
+    return fd;
+}
+
+int daemonize(){
+    pid_t pid=fork();
+    switch (pid){
+        case 0:
+            log<<"Child alive"<<endl;
+
+            break;
+        case -1:
+            log<<"Error in daemon"<<endl;
+            exit(EXIT_FAILURE);
+        default:
+            log<<"Main process ends"<<endl;
+            log<<"pid = "<<pid<<endl;
+            exit(EXIT_SUCCESS);
+    }
+    return 1;
+}
+
+int main(int argc, char** argv) {
+    getParam(argc,argv);
+    log.open("log.txt");
+
+    int fd=prepareSocket(server_ip,server_port);
+
+    daemonize();
+
+    int conn_fd=accept(fd,NULL,NULL);
+    log<<"accepted"<<endl;
+
+    char buf[1024];
+    while(recv(conn_fd,buf,1024,0)>0){
+        log<<buf<<endl;
+    }
+
+    log.close();
     return 0;
 }
