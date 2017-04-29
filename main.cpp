@@ -123,14 +123,15 @@ void processHTTP(int socket, std::string data) {
 
         std::string header;
         std::string data;
-        char buf[2048];
-        bzero(buf,2048);
+        int size=1024*10;
+        char buf[size];
+        bzero(buf,size);
         FILE *f=fopen(resource.c_str(),"r");
         if(f){
             //fread((void*)data.data(),1024*20,1,f);
-            fread(buf,2048,1,f);
+            fread(buf,size,1,f);
             data=buf;
-
+            fclose(f);
             header= "HTTP/1.0 200 OK\x0D\x0A"
                             "Content-Type: text/html\x0D\x0A"
                             "Connection: close\x0D\x0A"
@@ -149,7 +150,7 @@ void processHTTP(int socket, std::string data) {
         }
 
     }
-
+    close(socket);
 }
 
 int main(int argc, char** argv) {
