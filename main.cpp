@@ -12,6 +12,7 @@ uint16_t server_port=12345;
 char* server_directory;
 
 std::ofstream log;
+
 void getParam(int argc, char** argv){
     int opt;
     while((opt=getopt(argc,argv,"h:p:d:"))!=-1){
@@ -81,11 +82,12 @@ int daemonize(){
 
 int main(int argc, char** argv) {
     getParam(argc,argv);
-    log.open("log.txt");
+    log.open("/home/box/log.txt");
 
     int fd=prepareSocket(server_ip,server_port);
 
     daemonize();
+    chdir(server_directory);
 
     int conn_fd=accept(fd,NULL,NULL);
     log<<"accepted"<<endl;
