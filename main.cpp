@@ -7,7 +7,10 @@
 #include <vector>
 #include <sstream>
 #include <fcntl.h>
+#include <sys/epoll.h>
+#include <strings.h>
 
+#define MAX_EVENTS 20
 
 using std::endl;
 using std::cout;
@@ -121,7 +124,7 @@ void processHTTP(int socket, std::string data) {
         std::string header;
         std::string data;
         char buf[2048];
-
+        bzero(buf,2048);
         FILE *f=fopen(resource.c_str(),"r");
         if(f){
             //fread((void*)data.data(),1024*20,1,f);
@@ -157,6 +160,32 @@ int main(int argc, char** argv) {
 
     daemonize();
     chdir(server_directory);
+
+    int Epoll = epoll_create1(0);
+
+    epoll_event Event;
+    Event.data.fd=fd;
+    Event.events=EPOLLIN;
+    epoll_ctl(Epoll,EPOLL_CTL_ADD,fd,&Event);
+
+    for(int cnt=0;cnt<1000;cnt++){
+        epoll_event Events[MAX_EVENTS];
+        int N = epoll_wait(Epoll,Events,MAX_EVENTS,-1);
+
+        for(unsigned int i=0;i<N;i++){
+            if(Events[i].data.fd==fd){
+                int client = accept(fd,0,0);
+                Event.data.fd=client;
+                Event.events=EPOLLIN;
+                epoll_ctl(Epoll,EPOLL_CTL_ADD,client,&Event);
+            }
+            else{
+                char buf[1024];
+                recv(Events[i].data.fd,buf,1024,0);
+                processHTTP(Events[i].data.fd,buf);
+            }
+        }
+    }
 
     while(true){
         int client=accept(fd,NULL,NULL);
