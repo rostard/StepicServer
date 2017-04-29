@@ -3,6 +3,7 @@
 #include <arpa/inet.h>
 
 #include <fstream>
+#include <sys/stat.h>
 
 using std::endl;
 using std::cout;
@@ -67,6 +68,7 @@ int daemonize(){
     switch (pid){
         case 0:
             log<<"Child alive"<<endl;
+            umask(0);
             setsid();
             break;
         case -1:
@@ -93,10 +95,11 @@ int main(int argc, char** argv) {
     log<<"accepted"<<endl;
 
     char buf[1024];
-    while(recv(conn_fd,buf,1024,0)>0){
+    recv(conn_fd,buf,1024,0);
+        log<<"a";
         log<<buf<<endl;
-    }
 
+    close(fd);
     log.close();
     return 0;
 }
